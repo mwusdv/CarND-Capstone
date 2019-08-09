@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
+import numpy as np
 import rospy
 from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
+from scipy.spatial import KDTree
 
 import math
 
@@ -28,25 +30,63 @@ class WaypointUpdater(object):
     def __init__(self):
         rospy.init_node('waypoint_updater')
 
+       
+
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
 
-
-        self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
+        self._final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
         # TODO: Add other member variables you need below
+        self._base_waypoints = None
+        self._waypoints_2d = None
+        self._pose = None
+        self._waypoint_tree = None
 
-        rospy.spin()
+        self.loop()
+
+    def loop(self):
+        rate = rospy.Rate(30)
+        while not rospy.is_shutdown():
+            if self._pose and self._base_waypoints:
+                closest_waypoint_idx = self.get_closet_waypoint_idx()
+                self.publish_waypoints(closest_waypoint_idx)
+            rate.sleep()
+    
+    def get_closet_waypoint_idx(self):
+        x = self._pose.pose.position.x
+        y = self._pose.pose.position.y
+        closet_idx = self._waypoint_tree.query([x, y], 1)[1]
+
+        # check if the closet is ahead of behind the vehicle
+        closet_waypoint = np.array(self._waypoints_2d[closet_idx])
+        prev_waypoint = np.array(self._waypoints_2d[closet_idx-1])
+        pos = np.array([x, y])
+
+        val = np.dot(closet_waypoint - prev_waypoint, pos - closet_waypoint)
+        if val > 0:
+            closet_idx = (closet_idx + 1) % len(self._waypoints_2d)
+        
+        return closet_idx
+
+    def publish_waypoints(self, closet_idx):
+        lane = Lane()
+        lane.header = self._base_waypoints.header
+        lane.waypoints = self._base_waypoints.waypoints[closet_idx : closet_idx + LOOKAHEAD_WPS]
+        self._final_waypoints_pub.publish(lane)
 
     def pose_cb(self, msg):
-        # TODO: Implement
-        pass
+        self._pose = msg
 
     def waypoints_cb(self, waypoints):
-        # TODO: Implement
-        pass
+        self._base_waypoints = waypoints
+        if not self._waypoints_2d:
+            self._waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] 
+                                  for waypoint in waypoints.waypoints]
+            self._waypoint_tree = KDTree(self._waypoints_2d)
+
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
