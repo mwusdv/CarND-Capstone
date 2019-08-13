@@ -5,6 +5,7 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
 from scipy.spatial import KDTree
+from std_msgs.msg import Int32
 
 import math
 
@@ -25,6 +26,7 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 
 LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
 MAX_DECEL = 1.0
+PUBLISHING_RATE = 30
 
 class WaypointUpdater(object):
     def __init__(self):
@@ -42,7 +44,7 @@ class WaypointUpdater(object):
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
         # TODO: Add other member variables you need below
-        self.base_waypoints = None
+        self.base_lane = None
         self.waypoints_2d = None
         self.pose = None
         self.waypoint_tree = None
@@ -51,13 +53,12 @@ class WaypointUpdater(object):
         self.loop()
 
     def loop(self):
-        rate = rospy.Rate(30)
+        rate = rospy.Rate(PUBLISHING_RATE)
         while not rospy.is_shutdown():
-            if self.pose and self.base_waypoints:
-                closest_waypoint_idx = self.get_closet_waypoint_idx()
-                self.publish_waypoints(closest_waypoint_idx)
+            if self.pose and self.base_lane:
+                self.publish_waypoints()
             rate.sleep()
-    
+
     def get_closet_waypoint_idx(self):
         x = self.pose.pose.position.x
         y = self.pose.pose.position.y
@@ -74,7 +75,7 @@ class WaypointUpdater(object):
         
         return closet_idx
 
-    def publish_waypoints(self, closet_idx):
+    def publish_waypoints(self):
         final_lane = self.generate_lane()
         self.final_waypoints_pub.publish(final_lane)
 
@@ -83,7 +84,7 @@ class WaypointUpdater(object):
 
         closest_idx = self.get_closet_waypoint_idx()
         farthest_idx = closest_idx + LOOKAHEAD_WPS
-        waypoints = self.base_waypoints.waypoints[closest_idx:farthest_idx]
+        waypoints = self.base_lane.waypoints[closest_idx:farthest_idx]
 
         if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >= farthest_idx):
             lane.waypoints = waypoints
@@ -116,7 +117,7 @@ class WaypointUpdater(object):
         self.pose = msg
 
     def waypoints_cb(self, waypoints):
-        self.base_waypoints = waypoints
+        self.base_lane = waypoints
         if not self.waypoints_2d:
             self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] 
                                   for waypoint in waypoints.waypoints]
