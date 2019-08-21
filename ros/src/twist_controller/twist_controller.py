@@ -3,6 +3,7 @@ import rospy
 from lowpass import LowPassFilter
 from pid import PID
 from yaw_controller import YawController
+from std_msgs.msg import Float32
 
 GAS_DENSITY = 2.858
 MAX_BRAKE = 400.0
@@ -12,6 +13,7 @@ class Controller(object):
     def __init__(self, vehicle_mass, fuel_capacity, brake_deadband, decel_limit,
                  accel_limit, wheel_radius, wheel_base, steer_ratio, max_lat_accel, max_steer_angle):
 
+        self.heading_angle_sub = rospy.Subscriber('/turning_angle', Float32, self.turning_angle_cb)
         self.yaw_controller = YawController(wheel_base, steer_ratio, 0.1, max_lat_accel, max_steer_angle)
 
         kp = 0.3
@@ -31,6 +33,7 @@ class Controller(object):
         self.decel_limit = decel_limit
         self.accel_limit = accel_limit
         self.wheel_radius = wheel_radius
+        self.turning_angle = 0
 
         self.last_time = rospy.get_time()
         self.log_time = rospy.get_time()
@@ -63,5 +66,11 @@ class Controller(object):
             decel = max(vel_error, self.decel_limit)
             brake = min(MAX_BRAKE, (abs(decel) * self.vehicle_mass * self.wheel_radius))  # Torque N*m
 
-
+        if self.turning_angle > 5:
+            throttle = min(throttle, 0.01)
+            steering = max(-0.3, min(steering, 0.3))
+            rospy.logwarn('Turning angle is too big, small throttle')
         return throttle, brake, steering
+    
+    def turning_angle_cb(self, msg):
+        self.turning_angle = msg.data
