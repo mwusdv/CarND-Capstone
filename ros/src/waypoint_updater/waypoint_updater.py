@@ -26,7 +26,7 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 
 LOOKAHEAD_WPS = 50 # Number of waypoints we will publish. You can change this number
 MAX_DECEL = 0.5
-PUBLISHING_RATE = 20
+PUBLISHING_RATE = 30
 
 class WaypointUpdater(object):
     def __init__(self):
@@ -75,7 +75,7 @@ class WaypointUpdater(object):
         val = np.dot(closest_waypoint - prev_waypoint, pose - closest_waypoint)
         if val > 0:
             closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
-        
+
         min_turning_angle = 0
         if self.last_pose is not None:
             last_step = pose - self.last_pose
@@ -87,8 +87,9 @@ class WaypointUpdater(object):
             min_turning_angle = 100
             turning_angle = 100
             count = 0
+            opt_idx = closest_idx
 
-            while turning_angle > 5 and count < 20:
+            while turning_angle > 3 and count < LOOKAHEAD_WPS/2:
                 closest_waypoint = np.array(self.waypoints_2d[closest_idx])
                 wx = closest_waypoint[0]
                 wy = closest_waypoint[1]
@@ -96,8 +97,8 @@ class WaypointUpdater(object):
                 
                 val = np.dot(cur_step, last_step) / np.linalg.norm(cur_step) / last_norm
                 turning_angle = np.arccos(val) * 180/np.pi
-                rospy.logwarn('try_turning_angle: {}, car_x={}, car_y={}, w_x={}, w_y={}, count={}'.format(min_turning_angle, x, y,
-                               wx, wy, count))
+                #rospy.logwarn('try_turning_angle: {}, car_x={}, car_y={}, w_x={}, w_y={}, count={}'.format(min_turning_angle, x, y,
+                #               wx, wy, count))
                 if turning_angle < min_turning_angle:
                     min_turning_angle = turning_angle
                     opt_idx = closest_idx
@@ -105,14 +106,13 @@ class WaypointUpdater(object):
                 count += 1
                 closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
             
-            if turning_angle > 5:
-                closest_idx = opt_idx
+            closest_idx = opt_idx
             closest_waypoint = np.array(self.waypoints_2d[closest_idx])
             wx = closest_waypoint[0]
             wy = closest_waypoint[1]
             rospy.logwarn('turning_angle: {}, car_x={}, car_y={}, w_x={}, w_y={}, count={}'.format(min_turning_angle, x, y,
                           wx, wy, count))
-            rospy.logwarn('----------------------------------')
+            #rospy.logwarn('----------------------------------')
 
         self.closest_idx = closest_idx
         return closest_idx, min_turning_angle
