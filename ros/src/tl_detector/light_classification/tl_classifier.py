@@ -4,6 +4,20 @@ import cv2
 import numpy as np
 import rospy
 
+# only keep detections with high scores
+def filter_boxes(score_threshold, det_boxes, det_scores, det_classes):
+    n = len(det_classes)
+    idxs = []
+    for i in range(n):
+        if det_scores[i] >= score_threshold:
+            idxs.append(i)
+ 
+    filtered_boxes = det_boxes[idxs]
+    filtered_scores = det_scores[idxs]
+    filtered_classes = det_classes[idxs]
+    return filtered_boxes, filtered_scores, filtered_classes
+
+
 class TLClassifier(object):
     def __init__(self):
         self.model = self.load_graph()
@@ -44,14 +58,20 @@ class TLClassifier(object):
         scores = np.squeeze(scores)
         classes = np.squeeze(classes).astype(np.int32)
 
-        class_id = classes[0]
+        score_threshold = 0.55
+        boxes, scores, classes = filter_boxes(score_threshold, boxes, scores, classes)
 
-        if class_id == 1 or class_id == 2:
-            light_color = 'red'
-            result = TrafficLight.RED
-        elif class_id == 3:
-            light_color = 'green'
-            result = TrafficLight.GREEN
+        class_id = -1
+        result = TrafficLight.UNKNOWN;
+        if len(scores) > 0:
+            class_id = classes[0]
+
+            if class_id == 1 or class_id == 2:
+                light_color = 'red'
+                result = TrafficLight.RED
+            elif class_id == 3:
+                light_color = 'green'
+                result = TrafficLight.GREEN
         
 
         return result
