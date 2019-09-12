@@ -58,7 +58,7 @@ class TLClassifier(object):
         scores = np.squeeze(scores)
         classes = np.squeeze(classes).astype(np.int32)
 
-        score_threshold = 0.55
+        score_threshold = 0.6
         boxes, scores, classes = filter_boxes(score_threshold, boxes, scores, classes)
 
         class_id = -1
