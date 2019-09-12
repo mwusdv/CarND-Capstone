@@ -110,6 +110,11 @@ class TLDetector(object):
         self.state_count += 1
         self.last_detection = datetime.datetime.now()
 
+        if self.state == TrafficLight.RED:
+            rospy.logwarn("Traiffic light detected: red")
+        elif self.state == TrafficLight.GREEN:
+            rospy.logwarn("Traffic light detected: green")
+
 
     def get_closest_waypoint(self, x, y):
         """Identifies the closest path waypoint to the given position
