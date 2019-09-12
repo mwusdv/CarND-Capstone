@@ -15,6 +15,8 @@ import datetime
 from scipy.spatial import KDTree
 
 STATE_COUNT_THRESHOLD = 3
+CLASSIFICATION_INTERVAL = 500*1000  # 500 millisecond
+
 
 class TLDetector(object):
     def __init__(self):
@@ -53,6 +55,7 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
+        self.last_detection = datetime.datetime.now()
 
         rospy.spin()
 
@@ -77,6 +80,13 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
+
+        # reduce detection frequency
+        now = datetime.datetime.now()
+        delta_time = now - self.last_detection
+        if delta_time.microseconds < CLASSIFICATION_INTERVAL:
+            return
+
         self.has_image = True
         self.camera_image = msg
         light_wp, state = self.process_traffic_lights()
@@ -98,6 +108,7 @@ class TLDetector(object):
         else:
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
         self.state_count += 1
+        self.last_detection = datetime.datetime.now()
 
 
     def get_closest_waypoint(self, x, y):
