@@ -5,9 +5,9 @@ This is the project repo for the final project of the Udacity Self-Driving Car N
 Please use **one** of the two installation options, either native **or** docker installation.
 
 ## Bottleneck
-When I built `waypoint_updateer`, `twist_controller`, `tl_detector`, everything seemed to work well. The car could run a whole lap in the simulator. But when I activate the camera message in the simulator, in order to add traffic light detection, something went wrong.
+When I built `waypoint_updateer`, `twist_controller`, `tl_detector`, everything seemed to work well. The car could run a whole lap in the simulator. But when I activated the camera message in the simulator, in order to add traffic light detection, something went wrong.
 
-The car always started to wobble at a certain area. At first, I thought there were something special in that area. Therefore I made `waypoint_anaylyzer' and plotted the whole route:
+The car always started to wobble and finally went off the way at a certain area. At first, I thought there could be something special in that area. Therefore I made `waypoint_anaylyzer` and plotted the whole route:
 
 ![Example](waypoints.png)
 
@@ -15,26 +15,28 @@ And also the truning angles at each way point
 ![Example](turning_angles.png)
 
 
-Then I found the car started to wobble around the top right corner of the route. The rouhte there has a sharp turning, so I thought that could be the reason of the problem. Therefore I tried several approaches:
+Then I found the car started to wobble around the top right corner of the route, where the turning angles were relatively large. I thought that could be the reason of the problem. Therefore I tried several approaches:
 
-* Instead of giving the closet way point, give the way point further away such that the turning angle is not large.
+* Instead of giving the closet way point, I gave the way point further away such that the turning angle is not large between successive 3 way points
 
 * Resstrict the throttle when the steering is large
 
 * Change the speed of way point to make it slower
 
+* etc
 
-At some points, the car could go beyond that area, still with much wobbling though. But then the I encoutered the same problem after the next traffic light, which is around the middle of the top section of the route. The route there is relatively smooth, which made me think something else is wrong.
 
-I disable the camera message, the car could run properly again. I asked a mentor about this problem, he told the it should be caused by the bugs in my code. 
+At some points, the car could go a liitle furthur, although still with much wobbling. But then quickly I encoutered the same problem.
 
-One day I accidently changed the publish rate of way points to 1HZ. The car could go through the top right corner much smoother. But still went off the way around the middle of the top section of the route. This made me realize that something is wrong somewhere in the whole system: sync between nodes or probably sync between the simulator and the ros. 
+I disabled the camera message again, the car could run properly. I asked a mentor about this problem. He told me that the it should be caused by the bugs in my code. 
+
+One day I accidently changed the publishing rate of way points to 1HZ. The car could go through the top right corner much smoother. But still went off the way after the next traffic light around the middle of the top section of the route. The route there is relatively smooth. This made me realize that something is wrong somewhere in the system: sync between nodes or probably sync between the simulator and the ROS. 
 
 I checked on internet and found that many people had the same problem. And one of them described exact the same problem as mine: the car went off the way at the same area everytime if the camera message was enabled.
 
-I also tried to run the project on the workspace provided by Udacity, and also tried to run on a different laptop. Unfortunately none of them worked.
+I also tried to run the project on another laptop and on the workspace provided by Udacity. Unfortunately none of them worked.
 
-Having been blocked by this problem for several weeks, I just went ahead to add image detection. I submitted this project as it is. Hopefully it can run properly in a proper environment.
+Having been blocked by this problem for several weeks, I just went ahead to work on the remaining part to complete the necessary components. Here I submit this project as it is. Hopefully it can run properly in a proper environment.
 
 ## Origial README
 ### Native Installation
