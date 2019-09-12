@@ -38,7 +38,7 @@ def analyze_waypoints(data_fname):
     return heading_angles, way_points
 
 if __name__ == '__main__':
-    heading_angles, way_points = analyze_waypoints('/home/mingrui/udacity/self-driving/CarND-Capstone/data/wp_yaw_const.csv')
+    heading_angles, way_points = analyze_waypoints('../../../data/wp_yaw_const.csv')
     
     plt.plot(way_points[:, 0], way_points[:, 1], '.', color='red')
     plt.show()

@@ -1,7 +1,42 @@
 This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
 
+
+
 Please use **one** of the two installation options, either native **or** docker installation.
 
+## Bottleneck
+When I built `waypoint_updateer`, `twist_controller`, `tl_detector`, everything seemed to work well. The car could run a whole lap in the simulator. But when I activate the camera message in the simulator, in order to add traffic light detection, something went wrong.
+
+The car always started to wobble at a certain area. At first, I thought there were something special in that area. Therefore I made `waypoint_anaylyzer' and plotted the whole route:
+
+![Example](waypoints.png)
+
+And also the truning angles at each way point
+![Example](turning_angles.png)
+
+
+Then I found the car started to wobble around the top right corner of the route. The rouhte there has a sharp turning, so I thought that could be the reason of the problem. Therefore I tried several approaches:
+
+* Instead of giving the closet way point, give the way point further away such that the turning angle is not large.
+
+* Resstrict the throttle when the steering is large
+
+* Change the speed of way point to make it slower
+
+
+At some points, the car could go beyond that area, still with much wobbling though. But then the I encoutered the same problem after the next traffic light, which is around the middle of the top section of the route. The route there is relatively smooth, which made me think something else is wrong.
+
+I disable the camera message, the car could run properly again. I asked a mentor about this problem, he told the it should be caused by the bugs in my code. 
+
+One day I accidently changed the publish rate of way points to 1HZ. The car could go through the top right corner much smoother. But still went off the way around the middle of the top section of the route. This made me realize that something is wrong somewhere in the whole system: sync between nodes or probably sync between the simulator and the ros. 
+
+I checked on internet and found that many people had the same problem. And one of them described exact the same problem as mine: the car went off the way at the same area everytime if the camera message was enabled.
+
+I also tried to run the project on the workspace provided by Udacity, and also tried to run on a different laptop. Unfortunately none of them worked.
+
+Having been blocked by this problem for several weeks, I just went ahead to add image detection. I submitted this project as it is. Hopefully it can run properly in a proper environment.
+
+## Origial README
 ### Native Installation
 
 * Be sure that your workstation is running Ubuntu 16.04 Xenial Xerus or Ubuntu 14.04 Trusty Tahir. [Ubuntu downloads can be found here](https://www.ubuntu.com/download/desktop).
