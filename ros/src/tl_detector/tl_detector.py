@@ -14,7 +14,7 @@ import datetime
 
 from scipy.spatial import KDTree
 
-STATE_COUNT_THRESHOLD = 3
+STATE_COUNT_THRESHOLD = 2
 CLASSIFICATION_INTERVAL = 500*1000  # 500 millisecond
 
 
