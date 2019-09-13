@@ -4,6 +4,9 @@ This is the project repo for the final project of the Udacity Self-Driving Car N
 
 Please use **one** of the two installation options, either native **or** docker installation.
 
+## Note for running in simulator
+Due to sync issues between simulation and ROS, please run ros launch until the model file is loaded, then start simulator.
+
 ## Bottleneck
 When I built `waypoint_updateer`, `twist_controller`, `tl_detector`, everything seemed to work well. The car could run a whole lap in the simulator. But when I activated the camera message in the simulator, in order to add traffic light detection, something went wrong.
 
